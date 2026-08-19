@@ -1,5 +1,3 @@
-tap "homebrew/bundle"
-
 # Core setup
 brew "git"   # Version control system
 brew "stow"  # Symlink manager for dotfiles
