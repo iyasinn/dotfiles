@@ -1,0 +1,40 @@
+# ── TRON ──────────────────────────────────────────────
+# Monochrome blue-steel foundation, cyan hero, orange counterpoint
+
+background = #0b111c
+foreground = #b8cfe0
+
+# The cursor is the identity disc: brightest object on the grid
+cursor-color = #00d9ff
+cursor-text = #0b111c
+
+selection-background = #16243a
+selection-foreground = #d5e9f5
+
+split-divider-color = #1d2f47
+
+# ── ANSI ──
+# 0/8: floor and grid-line steel
+palette = 0=#101928
+palette = 8=#3d5a73
+# 1/9: heat — errors only, red pulled toward orange
+palette = 1=#ff5f45
+palette = 9=#ff8266
+# 2/10: "green" as grid-teal, on the blue axis
+palette = 2=#4fd6be
+palette = 10=#7ce8d4
+# 3/11: "yellow" as muted amber, cousin of the orange
+palette = 3=#e6b455
+palette = 11=#f2cd80
+# 4/12: hero cyan lives in the blue slot
+palette = 4=#00d9ff
+palette = 12=#66e9ff
+# 5/13: "magenta" as cool violet, never candy purple
+palette = 5=#a48cff
+palette = 13=#c3b2ff
+# 6/14: secondary cyan — the soft poster glow
+palette = 6=#6fc3df
+palette = 14=#9fdcef
+# 7/15: steel text, then suit-white with a cyan halo
+palette = 7=#b8cfe0
+palette = 15=#eafcff

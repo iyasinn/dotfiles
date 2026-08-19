@@ -1,0 +1,27 @@
+# Tron — matches nvim base16 tron palette
+background = #14191f
+foreground = #aec2e0
+
+cursor-color = #00d9ff
+cursor-text = #14191f
+
+selection-background = #28323a
+selection-foreground = #c8e0f0
+
+# ANSI slots mapped from the base16 palette
+palette = 0=#14191f
+palette = 1=#e61f44
+palette = 2=#a6e22e
+palette = 3=#ffe64d
+palette = 4=#00d9ff
+palette = 5=#af87ff
+palette = 6=#6fc3df
+palette = 7=#aec2e0
+palette = 8=#526270
+palette = 9=#ff4d6e
+palette = 10=#c0f050
+palette = 11=#fff27a
+palette = 12=#66e5ff
+palette = 13=#c9a8ff
+palette = 14=#9fd9ef
+palette = 15=#ffffff
