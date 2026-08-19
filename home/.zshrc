@@ -17,8 +17,7 @@ fi
 # ----- Zinit (manages all plugins) -----
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [ ! -d "$ZINIT_HOME" ]; then
-  # TODO: This looks like a typo. Should probably be `mkdir -p`, not `mkdir-p`.
-  mkdir-p "$(dirname "$ZINIT_HOME")"
+  mkdir -p "$(dirname "$ZINIT_HOME")"
   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
 source "$ZINIT_HOME/zinit.zsh"
@@ -30,14 +29,6 @@ source "$ZINIT_HOME/zinit.zsh"
 # zstyle':autocomplete:*' delay 0.05      # seconds before the list appears
 # zinit light marlonrichert/zsh-autocomplete
 
-# ----- pyenv -----
-# TODO: If mise replaces Python management, remove this whole pyenv block.
-# TODO: Also remove the brew alias below if pyenv is removed.
-alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init - zsh)"
-
 # ----- Aliases -----
 # TODO: Consider moving aliases into ~/.config/zsh/aliases.zsh later.
 alias lg='lazygit'
@@ -46,17 +37,13 @@ alias lg='lazygit'
 # TODO: Make sure ~/.config/zsh/secrets.zsh is never committed if it contains tokens/API keys.
 [[ -f "$HOME/.config/zsh/secrets.zsh" ]] && source "$HOME/.config/zsh/secrets.zsh"
 
-# ----- NVM -----
-# TODO: If mise replaces Node management, remove this whole NVM block.
-export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
-[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
-
 # ----- Java -----
 # TODO: Remove this hardcoded Java block if you do not actively need Java 21 globally.
 # TODO: If you want Java version management later, consider moving Java to mise too.
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-export PATH="$JAVA_HOME/bin:$PATH"
+if /usr/libexec/java_home -v 21 >/dev/null 2>&1; then
+  export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
 
 # ----- Add .local/bin to our path -----
 # TODO: Keep this if you use personal scripts like ~/.local/bin/entire or ~/.local/bin/herdr.
@@ -79,6 +66,9 @@ zinit light tolkonepiu/catppuccin-powerlevel10k-themes
 # ----- Syntax highlighting (must stay last) -----
 zinit light zsh-users/zsh-syntax-highlighting
 
-# TODO: If mise becomes your main runtime manager, keep this and remove pyenv/nvm above.
-eval "$(mise activate zsh)"
+# ----- mise -----
+# Runtime/tool version manager. Replaces pyenv/nvm/asdf-style setup.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 
