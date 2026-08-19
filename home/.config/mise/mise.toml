@@ -1,0 +1,35 @@
+  # ~/.config/mise/config.toml
+   #
+   # Global mise config.
+   # Defines default tools available across the whole machine.
+   # Project-specific mise.toml files can override these.
+
+   [tools]
+   # JavaScript runtime. Includes npm/corepack.
+   # node = "lts"
+
+   # Fast, disk-efficient JS package manager.
+   # pnpm = "latest"
+
+   # Python runtime.
+   # python = "latest"
+
+   # Fast Python package/project manager.
+   # uv = "latest"
+
+   # Go runtime/toolchain.
+   # go = "latest"
+
+   # Rust toolchain.
+   # rust = "latest"
+
+
+   [settings]
+   # Automatically install missing tools when a project asks for them.
+   # auto_install = true
+
+   # Let mise understand common version files from other ecosystems.
+   # Examples:
+   # .node-version, .python-version, .ruby-version
+   # idiomatic_version_file_enable_tools = ["node", "python", "ruby"]
+

@@ -1,0 +1,21 @@
+# ~/.config/mise/config.toml
+#
+# Global mise config.
+# Keep this barebones for now.
+# Add tools here only when you want mise to manage their versions globally.
+
+[settings]
+# Automatically install missing tools when mise encounters them in a project/global config.
+auto_install = true
+
+# Let mise read common version files from other ecosystems when present.
+# Examples: .node-version, .python-version, .ruby-version
+idiomatic_version_file_enable_tools = ["node", "python", "ruby"]
+
+# [tools]
+# Add global default runtimes later if/when you want them.
+# Examples:
+# node = "lts"
+# python = "latest"
+# go = "latest"
+# rust = "latest"

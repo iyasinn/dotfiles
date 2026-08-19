@@ -1,0 +1,181 @@
+# Hyprspace starter config.
+#
+# This file is intentionally small. Hyprspace already provides opinionated built-in
+# defaults for the dwindle-friendly layout behavior, so this file only contains the
+# first shortcuts new users are likely to want immediately.
+#
+# For a fuller reference config, see: ~/.config/hyprspace/docs/default-config.toml
+# For path rules, see: ~/.config/hyprspace/docs/README.md
+# For all available config options and commands, see:
+# https://nikitabobko.github.io/AeroSpace/guide
+# https://nikitabobko.github.io/AeroSpace/commands
+
+config-version = 2
+start-at-login = true
+auto-reload-config = true
+
+# Keep the tiling tree clean and predictable as windows are opened/moved.
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'horizontal'
+
+# Make focus changes across monitors easier to follow.
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+# Prevent accidentally hidden macOS apps from feeling "lost" in the tiling setup.
+automatically-unhide-macos-hidden-apps = true
+
+persistent-workspaces = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+after-startup-command = [
+    'exec-and-forget borders active_color=0xff55b6c2 inactive_color=0xff3b414a width=7.0 hidpi=off',
+]
+
+exec-on-workspace-change = [
+    '/bin/bash',
+    '-lc',
+    'sketchybar --trigger hyprspace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE PREV_WORKSPACE=$AEROSPACE_PREV_WORKSPACE',
+]
+
+[gaps]
+inner.horizontal = 12
+inner.vertical = 12
+outer.left = 9
+outer.right = 9
+outer.bottom = 9
+outer.top = [{ monitor."built-in" = 9 }, { monitor."main" = 48 }, 48]
+
+# ---------- MAIN KEY BINDINGS -----------
+
+[mode.main.binding]
+alt-shift-p = 'open-terminal Ghostty btop'
+
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+alt-n = 'workspace --wrap-around next'
+alt-p = 'workspace --wrap-around prev'
+# alt-shift-leftSquareBracket = 'workspace --wrap-around prev'
+# alt-shift-rightSquareBracket = 'workspace --wrap-around next'
+
+alt-shift-1 = 'move-node-to-workspace 1'
+alt-shift-2 = 'move-node-to-workspace 2'
+alt-shift-3 = 'move-node-to-workspace 3'
+alt-shift-4 = 'move-node-to-workspace 4'
+alt-shift-5 = 'move-node-to-workspace 5'
+alt-shift-6 = 'move-node-to-workspace 6'
+alt-shift-7 = 'move-node-to-workspace 7'
+alt-shift-8 = 'move-node-to-workspace 8'
+alt-shift-9 = 'move-node-to-workspace 9'
+
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+alt-tab = 'workspace-back-and-forth'
+alt-shift-tab = 'move-node-to-monitor --focus-follows-window --wrap-around next'
+alt-shift-backtick = 'move-workspace-to-monitor --wrap-around next'
+alt-space = 'layout tiles accordion'
+alt-shift-space = 'layout floating tiling'
+alt-shift-semicolon = 'mode service'
+alt-shift-slash = 'layout tiles horizontal vertical'
+alt-shift-comma = 'layout accordion horizontal vertical'
+alt-minus = 'resize height -50'
+alt-equal = 'resize height +50'
+alt-shift-minus = 'resize width -50'
+alt-shift-equal = 'resize width +50'
+alt-f = 'fullscreen'
+alt-shift-f = 'macos-native-fullscreen'
+
+# ---------- SERVICE MODE -----------
+
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']
+f = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+
+alt-shift-h = ['join-with left', 'mode main']
+alt-shift-j = ['join-with down', 'mode main']
+alt-shift-k = ['join-with up', 'mode main']
+alt-shift-l = ['join-with right', 'mode main']
+
+alt-shift-semicolon = 'mode main'
+
+# ---------- WINDOW CONTROL -----------
+
+[[on-window-detected]]
+if.app-id = "com.apple.finder"
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = "com.apple.ScreenSharing"
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = "com.apple.MobileSMS"
+run = ["layout floating", "move-node-to-workspace 9"]
+
+[[on-window-detected]]
+if.app-id = 'com.apple.iphonesimulator'
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = ['layout floating', 'move-node-to-workspace 9']
+
+[[on-window-detected]]
+if.app-id = "com.microsoft.teams2"
+run = ["layout floating", "move-node-to-workspace 9"]
+
+[[on-window-detected]]
+if.app-id = 'com.macpaw.CleanMyMac'
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = "com.macpaw.CleanMyMac4"
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = "com.bitwarden.desktop"
+run = ["layout floating"]
+
+[[on-window-detected]]
+if.app-id = "com.apple.QuickTimePlayerX"
+run = ["layout floating"]
+
+# [[on-window-detected]]
+# if = 'test %{app-bundle-id} = md.obsidian && test %{window-title} ~= settings'
+# run = ["layout floating"]
+#
+# [[on-window-detected]]
+# if = 'test %{app-bundle-id} = md.obsidian && test %{window-title} ~= plugin'
+# run = ["layout floating"]
+
+# TODO: Revisit these workspace-routing rules after trying them for a day or two.
+# Keep them only if they reduce workspace pollution without fighting intentional skhd placement.
+# Ambient apps: route passive/background apps away from active workspaces.
+[[on-window-detected]]
+if.app-id = "com.spotify.client"
+run = ["move-node-to-workspace 8"]
+
+[[on-window-detected]]
+if.app-id = "com.hnc.Discord"
+run = ["move-node-to-workspace 9"]
+
+[[on-window-detected]]
+if.app-id = "net.whatsapp.WhatsApp"
+run = ["move-node-to-workspace 9"]

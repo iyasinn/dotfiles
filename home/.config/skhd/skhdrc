@@ -1,0 +1,26 @@
+#
+# alt - h : yabai -m window --focus weks
+# alt - j : yabai -m window --focus south
+# alt - k : yabai -m window --focus north
+# alt - l : yabai -m window --focus east
+#
+# shift + alt - h : yabai -m window --warp west
+# shift + alt - j : yabai -m window --warp south
+# shift + alt - k : yabai -m window --warp north
+# shift + alt - l : yabai -m window --warp east
+
+# Applications
+alt - g : open -a Ghostty
+alt - a : open -a Arc
+alt - s : open -a Spotify
+alt - d : open -a Discord
+alt - x : open -a Linear
+alt - o : open -a Obsidian
+
+# Sites
+shift + alt - g : open -a Arc "https://github.com"
+# shift + alt - g : open -a Arc "https://github.com"; osascript -e 'delay
+#   0.4' -e 'tell application "Arc" to activate' -e 'tell application "System
+#   Events" to tell process "Arc" to set value of attribute "AXFullScreen" of
+#   window 1 to true'
+

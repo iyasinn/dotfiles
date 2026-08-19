@@ -1,0 +1,80 @@
+# ─────────────────────────────────────────────────────────────
+# Ghostty Configuration
+# Clean / dark / daily-driver — theming delegated to named theme
+# ─────────────────────────────────────────────────────────────
+
+
+# ── Font ──────────────────────────────────────────────────────
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+
+# Slightly stronger text rendering on macOS
+font-thicken = true
+font-thicken-strength = 80
+
+# Optional: disable ligatures if you dislike them
+# font-feature = -liga
+# font-feature = -calt
+
+
+# ── Theme ─────────────────────────────────────────────────────
+# Swap this one line to re-theme the terminal.
+# Browse options with: ghostty +list-themes
+# theme = Cyberpunk Scarlet Protocol
+theme = tron-legacy
+# theme = thorn-forest
+
+# Deliberate overrides on top of the theme (uncomment to use):
+
+cursor-style = block
+
+
+# ── Window ────────────────────────────────────────────────────
+window-padding-x = 10
+window-padding-y = 8
+window-padding-balance = true
+
+window-width = 110
+window-height = 34
+
+window-theme = dark
+window-colorspace = display-p3
+window-vsync = true
+
+window-inherit-working-directory = true
+window-inherit-font-size = true
+
+# Glass look — blur only works with opacity < 1
+background-opacity = 0.8
+background-blur = 30
+unfocused-split-opacity = 0.7
+
+
+# ── macOS ─────────────────────────────────────────────────────
+macos-titlebar-style = transparent
+
+# Required for tmux M-h/j/k/l resize and autocomplete Alt-keys
+macos-option-as-alt = true
+
+# Ultra-clean frameless look:
+macos-titlebar-style = hidden
+
+
+# ── Keybinds ──────────────────────────────────────────────────
+# Tabs / windows (tmux owns splits — see tmux.conf)
+keybind = super+t=new_tab
+keybind = super+n=new_window
+
+# Font size
+keybind = super+equal=increase_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = super+0=reset_font_size
+
+# Reload config
+keybind = super+shift+r=reload_config
+
+
+# ── Experimental Shaders ──────────────────────────────────────
+# Put shader files in: ~/.config/ghostty/shaders/
+# custom-shader = ~/.config/ghostty/shaders/bloom.glsl
+
