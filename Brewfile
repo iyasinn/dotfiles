@@ -1,4 +1,4 @@
-tap "homebrew/bundle" # Enables `brew bundle` support for installing from this Brewfile
+tap "homebrew/bundle"
 
 # Core setup
 brew "git"   # Version control system
