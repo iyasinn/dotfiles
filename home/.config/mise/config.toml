@@ -8,6 +8,8 @@ node = "lts"
 python = "latest"
 bun = "latest"
 rust = "latest"
+pnpm = "latest"
+opam = "latest"
 
 [settings]
 # Automatically install missing tool versions when a project/global config asks for them.
