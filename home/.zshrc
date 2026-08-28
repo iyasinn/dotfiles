@@ -7,6 +7,8 @@ export KEYTIMEOUT=10
 export EDITOR=nvim
 export VISUAL=nvim
 
+
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -32,6 +34,7 @@ source "$ZINIT_HOME/zinit.zsh"
 # ----- Aliases -----
 # TODO: Consider moving aliases into ~/.config/zsh/aliases.zsh later.
 alias lg='lazygit'
+alias dotf='cd ~/anvil/dotfiles/ && nvim .'
 
 # ----- Secrets (kept out of the dotfiles repo, chmod 600) -----
 # TODO: Make sure ~/.config/zsh/secrets.zsh is never committed if it contains tokens/API keys.
@@ -72,3 +75,12 @@ if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 
+
+
+# BEGIN opam configuration
+# This is useful if you're using opam as it adds:
+#   - the correct directories to the PATH
+#   - auto-completion for the opam binary
+# This section can be safely removed at any time if needed.
+[[ ! -r '/Users/iyasin/.opam/opam-init/init.zsh' ]] || source '/Users/iyasin/.opam/opam-init/init.zsh' > /dev/null 2> /dev/null
+# END opam configuration
