@@ -1,0 +1,413 @@
+-- ~/.config/wezterm/wezterm.lua
+
+local wezterm = require("wezterm")
+local act = wezterm.action
+
+local config = wezterm.config_builder()
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Core / Rendering
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- -- Stable GPU rendering.
+-- -- If WebGpu causes issues, comment these two lines out.
+-- config.front_end = "WebGpu"
+-- config.webgpu_power_preference = "HighPerformance"
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Font
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.font = wezterm.font_with_fallback({
+-- 	"JetBrainsMono Nerd Font",
+-- 	"JetBrains Mono",
+-- 	"Symbols Nerd Font Mono",
+-- })
+--
+-- config.font_size = 14.0
+-- config.line_height = 1.08
+-- config.cell_width = 1.00
+--
+-- config.freetype_load_target = "Light"
+-- config.freetype_render_target = "HorizontalLcd"
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Window
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.window_decorations = "RESIZE"
+-- config.window_close_confirmation = "NeverPrompt"
+--
+-- config.window_padding = {
+-- 	left = 12,
+-- 	right = 12,
+-- 	top = 10,
+-- 	bottom = 8,
+-- }
+--
+-- config.initial_cols = 110
+-- config.initial_rows = 34
+--
+-- -- Clean glassy look
+-- config.window_background_opacity = 0.8
+-- config.macos_window_background_blur = 28
+--
+-- config.inactive_pane_hsb = {
+-- 	saturation = 0.75,
+-- 	brightness = 0.62,
+-- }
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Colors
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- -- You can swap this to "Catppuccin Mocha", "Tokyo Night Storm",
+-- -- "Gruvbox dark, medium", etc.
+-- config.color_scheme = "Tokyo Night"
+--
+-- config.colors = {
+-- 	foreground = "#e6edf3",
+-- 	background = "#080b12",
+--
+-- 	cursor_bg = "#c084fc",
+-- 	cursor_fg = "#080b12",
+-- 	cursor_border = "#c084fc",
+--
+-- 	selection_fg = "#080b12",
+-- 	selection_bg = "#c7d2fe",
+--
+-- 	split = "#30363d",
+--
+-- 	tab_bar = {
+-- 		background = "#080b12",
+--
+-- 		active_tab = {
+-- 			bg_color = "#c084fc",
+-- 			fg_color = "#080b12",
+-- 			intensity = "Bold",
+-- 		},
+--
+-- 		inactive_tab = {
+-- 			bg_color = "#111827",
+-- 			fg_color = "#9ca3af",
+-- 		},
+--
+-- 		inactive_tab_hover = {
+-- 			bg_color = "#1f2937",
+-- 			fg_color = "#e5e7eb",
+-- 		},
+--
+-- 		new_tab = {
+-- 			bg_color = "#080b12",
+-- 			fg_color = "#9ca3af",
+-- 		},
+--
+-- 		new_tab_hover = {
+-- 			bg_color = "#1f2937",
+-- 			fg_color = "#e5e7eb",
+-- 		},
+-- 	},
+-- }
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Tabs
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.enable_tab_bar = true
+-- config.hide_tab_bar_if_only_one_tab = false
+-- config.use_fancy_tab_bar = false
+-- config.tab_bar_at_bottom = true
+-- config.tab_max_width = 28
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Cursor
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.default_cursor_style = "BlinkingBlock"
+-- config.cursor_blink_rate = 500
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Scrollback
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.scrollback_lines = 10000
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Leader
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.leader = {
+-- 	key = "a",
+-- 	mods = "CTRL",
+-- 	timeout_milliseconds = 1000,
+-- }
+--
+-- local directions = {
+-- 	h = "Left",
+-- 	j = "Down",
+-- 	k = "Up",
+-- 	l = "Right",
+-- }
+--
+-- local function is_nvim(pane)
+-- 	return pane:get_user_vars().IS_NVIM == "true"
+-- end
+--
+-- local function split_nav(resize_or_move, key)
+-- 	local direction = directions[key]
+-- 	local mods = resize_or_move == "resize" and "ALT" or "CTRL"
+--
+-- 	return {
+-- 		key = key,
+-- 		mods = mods,
+-- 		action = wezterm.action_callback(function(window, pane)
+-- 			if is_nvim(pane) or #window:active_tab():panes() == 1 then
+-- 				window:perform_action(act.SendKey({ key = key, mods = mods }), pane)
+-- 			elseif resize_or_move == "resize" then
+-- 				window:perform_action(act.AdjustPaneSize({ direction, 4 }), pane)
+-- 			else
+-- 				window:perform_action(act.ActivatePaneDirection(direction), pane)
+-- 			end
+-- 		end),
+-- 	}
+-- end
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Keybinds
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.keys = {
+-- 	-- Reload config
+-- 	{
+-- 		key = "r",
+-- 		mods = "CMD|SHIFT",
+-- 		action = act.ReloadConfiguration,
+-- 	},
+--
+-- 	-- New tab / close tab
+-- 	{
+-- 		key = "t",
+-- 		mods = "CMD",
+-- 		action = act.SpawnTab("CurrentPaneDomain"),
+-- 	},
+-- 	{
+-- 		key = "w",
+-- 		mods = "CMD",
+-- 		action = act.CloseCurrentTab({ confirm = false }),
+-- 	},
+--
+-- 	-- Tab navigation
+-- 	{
+-- 		key = "LeftArrow",
+-- 		mods = "CMD|SHIFT",
+-- 		action = act.ActivateTabRelative(-1),
+-- 	},
+-- 	{
+-- 		key = "RightArrow",
+-- 		mods = "CMD|SHIFT",
+-- 		action = act.ActivateTabRelative(1),
+-- 	},
+--
+-- 	-- Leader + number: jump to tab
+-- 	-- Ctrl+a, 1 -> tab 1
+-- 	-- Ctrl+a, 2 -> tab 2
+-- 	-- etc.
+-- 	{
+-- 		key = "1",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(0),
+-- 	},
+-- 	{
+-- 		key = "2",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(1),
+-- 	},
+-- 	{
+-- 		key = "3",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(2),
+-- 	},
+-- 	{
+-- 		key = "4",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(3),
+-- 	},
+-- 	{
+-- 		key = "5",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(4),
+-- 	},
+-- 	{
+-- 		key = "6",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(5),
+-- 	},
+-- 	{
+-- 		key = "7",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(6),
+-- 	},
+-- 	{
+-- 		key = "8",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(7),
+-- 	},
+-- 	{
+-- 		key = "9",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateTab(8),
+-- 	},
+--
+-- 	-- Session / workspace management
+-- 	-- Ctrl+a, s -> pick workspace/session
+-- 	{
+-- 		key = "s",
+-- 		mods = "LEADER",
+-- 		action = act.ShowLauncherArgs({
+-- 			flags = "WORKSPACES",
+-- 			title = "Workspaces",
+-- 		}),
+-- 	},
+--
+-- 	-- Ctrl+a, S -> create/switch workspace by name
+-- 	{
+-- 		key = "S",
+-- 		mods = "LEADER|SHIFT",
+-- 		action = act.PromptInputLine({
+-- 			description = "Workspace name",
+-- 			action = wezterm.action_callback(function(window, pane, line)
+-- 				if line and line ~= "" then
+-- 					window:perform_action(
+-- 						act.SwitchToWorkspace({
+-- 							name = line,
+-- 						}),
+-- 						pane
+-- 					)
+-- 				end
+-- 			end),
+-- 		}),
+-- 	},
+--
+-- 	-- Rename current tab: Ctrl+a, ,
+-- 	{
+-- 		key = ",",
+-- 		mods = "LEADER",
+-- 		action = act.PromptInputLine({
+-- 			description = "Rename tab",
+-- 			action = wezterm.action_callback(function(window, pane, line)
+-- 				if line and line ~= "" then
+-- 					window:active_tab():set_title(line)
+-- 				end
+-- 			end),
+-- 		}),
+-- 	},
+--
+-- 	-- Splits: Ctrl+a, \ and Ctrl+a, -
+-- 	{
+-- 		key = "\\",
+-- 		mods = "LEADER",
+-- 		action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }),
+-- 	},
+-- 	{
+-- 		key = "-",
+-- 		mods = "LEADER",
+-- 		action = act.SplitVertical({ domain = "CurrentPaneDomain" }),
+-- 	},
+--
+-- 	-- Smart split movement: Ctrl+h/j/k/l
+-- 	split_nav("move", "h"),
+-- 	split_nav("move", "j"),
+-- 	split_nav("move", "k"),
+-- 	split_nav("move", "l"),
+--
+-- 	-- Leader movement fallback
+-- 	{
+-- 		key = "h",
+-- 		mods = "LEADER",
+-- 		action = act.ActivatePaneDirection("Left"),
+-- 	},
+-- 	{
+-- 		key = "j",
+-- 		mods = "LEADER",
+-- 		action = act.ActivatePaneDirection("Down"),
+-- 	},
+-- 	{
+-- 		key = "k",
+-- 		mods = "LEADER",
+-- 		action = act.ActivatePaneDirection("Up"),
+-- 	},
+-- 	{
+-- 		key = "l",
+-- 		mods = "LEADER",
+-- 		action = act.ActivatePaneDirection("Right"),
+-- 	},
+--
+-- 	-- Smart split resizing: Alt+h/j/k/l
+-- 	split_nav("resize", "h"),
+-- 	split_nav("resize", "j"),
+-- 	split_nav("resize", "k"),
+-- 	split_nav("resize", "l"),
+--
+-- 	-- Close pane
+-- 	{
+-- 		key = "x",
+-- 		mods = "LEADER",
+-- 		action = act.CloseCurrentPane({ confirm = true }),
+-- 	},
+--
+-- 	-- Zoom pane
+-- 	{
+-- 		key = "z",
+-- 		mods = "LEADER",
+-- 		action = act.TogglePaneZoomState,
+-- 	},
+--
+-- 	-- Copy mode
+-- 	{
+-- 		key = "[",
+-- 		mods = "LEADER",
+-- 		action = act.ActivateCopyMode,
+-- 	},
+--
+-- 	-- Font size
+-- 	{
+-- 		key = "=",
+-- 		mods = "CMD",
+-- 		action = act.IncreaseFontSize,
+-- 	},
+-- 	{
+-- 		key = "-",
+-- 		mods = "CMD",
+-- 		action = act.DecreaseFontSize,
+-- 	},
+-- 	{
+-- 		key = "0",
+-- 		mods = "CMD",
+-- 		action = act.ResetFontSize,
+-- 	},
+-- }
+--
+-- -- ─────────────────────────────────────────────────────────────
+-- -- Mouse
+-- -- ─────────────────────────────────────────────────────────────
+--
+-- config.mouse_bindings = {
+-- 	{
+-- 		event = { Up = { streak = 1, button = "Left" } },
+-- 		mods = "CMD",
+-- 		action = act.OpenLinkAtMouseCursor,
+-- 	},
+-- }
+--
+-- wezterm.on("update-right-status", function(window, _)
+-- 	local workspace = window:active_workspace()
+--
+-- 	window:set_right_status(wezterm.format({
+-- 		{ Foreground = { Color = "#9ca3af" } },
+-- 		{ Text = " session " },
+-- 		{ Foreground = { Color = "#c084fc" } },
+-- 		{ Text = workspace .. " " },
+-- 	}))
+-- end)
+--
+-- return config
