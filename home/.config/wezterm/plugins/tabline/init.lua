@@ -37,7 +37,15 @@ function M.apply(config)
     },
     extensions = {},
   })
+  local padding = {}
+  for side, value in pairs(config.window_padding) do
+    padding[side] = value
+  end
+  local tab_max_width = config.tab_max_width
   tabline.apply_to_config(config)
+  -- Tabline also applies layout defaults; keep the main config's geometry.
+  config.window_padding = padding
+  config.tab_max_width = tab_max_width
 end
 
 function M.fallback(_config)

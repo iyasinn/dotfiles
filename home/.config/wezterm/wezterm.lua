@@ -61,16 +61,16 @@ config.leader = {
 
 config.keys = {
 	-- Reload and native macOS controls
-	{ key = "r", mods = "CMD|SHIFT", action = act.ReloadConfiguration },
-	{ key = "t", mods = "CMD", action = act.SpawnTab("CurrentPaneDomain") },
-	{ key = "w", mods = "CMD", action = act.CloseCurrentTab({ confirm = true }) },
-	{ key = "n", mods = "CMD", action = act.SpawnWindow },
-	{ key = "z", mods = "CMD", action = act.TogglePaneZoomState },
-	{ key = "LeftArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(-1) },
-	{ key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(1) },
+	{ key = "r", mods = "CMD|SHIFT", action = act.ReloadConfiguration, desc = "Reload WezTerm config" },
+	{ key = "t", mods = "CMD", action = act.SpawnTab("CurrentPaneDomain"), desc = "New tab" },
+	{ key = "w", mods = "CMD", action = act.CloseCurrentTab({ confirm = true }), desc = "Close current tab" },
+	{ key = "n", mods = "CMD", action = act.SpawnWindow, desc = "New window" },
+	{ key = "z", mods = "CMD", action = act.TogglePaneZoomState, desc = "Toggle pane zoom" },
+	{ key = "LeftArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(-1), desc = "Previous tab" },
+	{ key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(1), desc = "Next tab" },
 
 	-- Send a literal Ctrl+a with Ctrl+a, Ctrl+a.
-	{ key = "a", mods = "LEADER|CTRL", action = act.SendKey({ key = "a", mods = "CTRL" }) },
+	{ key = "a", mods = "LEADER|CTRL", action = act.SendKey({ key = "a", mods = "CTRL" }), desc = "Send literal Ctrl-a" },
 
 	-- Tabs
 	{ key = "1", mods = "LEADER", action = act.ActivateTab(0) },
@@ -83,18 +83,18 @@ config.keys = {
 	{ key = "8", mods = "LEADER", action = act.ActivateTab(7) },
 	{ key = "9", mods = "LEADER", action = act.ActivateTab(8) },
 	-- Splits
-	{ key = "\\", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
-	{ key = "-", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },
-	{ key = "H", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Left", 4 }) },
-	{ key = "J", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Down", 4 }) },
-	{ key = "K", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Up", 4 }) },
-	{ key = "L", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Right", 4 }) },
-	{ key = "x", mods = "LEADER", action = act.CloseCurrentPane({ confirm = true }) },
-	{ key = "z", mods = "LEADER", action = act.TogglePaneZoomState },
+	{ key = "\\", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }), desc = "Split pane horizontally" },
+	{ key = "-", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }), desc = "Split pane vertically" },
+	{ key = "H", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Left", 4 }), desc = "Resize pane left" },
+	{ key = "J", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Down", 4 }), desc = "Resize pane down" },
+	{ key = "K", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Up", 4 }), desc = "Resize pane up" },
+	{ key = "L", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Right", 4 }), desc = "Resize pane right" },
+	{ key = "x", mods = "LEADER", action = act.CloseCurrentPane({ confirm = true }), desc = "Close current pane" },
+	{ key = "z", mods = "LEADER", action = act.TogglePaneZoomState, desc = "Toggle pane zoom" },
 
 	-- Utilities
-	{ key = "[", mods = "LEADER", action = act.ActivateCopyMode },
-	{ key = "o", mods = "LEADER", action = act.QuickSelect },
+	{ key = "[", mods = "LEADER", action = act.ActivateCopyMode, desc = "Copy mode" },
+	{ key = "o", mods = "LEADER", action = act.QuickSelect, desc = "Quick select" },
 }
 
 config.mouse_bindings = {

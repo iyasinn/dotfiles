@@ -23,7 +23,7 @@ function M.apply(config)
     local plugin = require(entry.module)
 
     if M.enabled[entry.name] then
-      plugin.apply(config)
+      plugin.apply(config, M.enabled)
     elseif plugin.fallback then
       plugin.fallback(config)
     end
