@@ -29,8 +29,8 @@ config.window_padding = {
 	top = 10,
 	bottom = 8,
 }
--- config.window_background_opacity = 0.86
-config.window_background_opacity = 1
+config.window_background_opacity = 0.86
+-- config.window_background_opacity = 1
 config.macos_window_background_blur = 24
 config.inactive_pane_hsb = {
 	saturation = 0.85,
@@ -70,7 +70,12 @@ config.keys = {
 	{ key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(1), desc = "Next tab" },
 
 	-- Send a literal Ctrl+a with Ctrl+a, Ctrl+a.
-	{ key = "a", mods = "LEADER|CTRL", action = act.SendKey({ key = "a", mods = "CTRL" }), desc = "Send literal Ctrl-a" },
+	{
+		key = "a",
+		mods = "LEADER|CTRL",
+		action = act.SendKey({ key = "a", mods = "CTRL" }),
+		desc = "Send literal Ctrl-a",
+	},
 
 	-- Tabs
 	{ key = "1", mods = "LEADER", action = act.ActivateTab(0) },
@@ -83,8 +88,18 @@ config.keys = {
 	{ key = "8", mods = "LEADER", action = act.ActivateTab(7) },
 	{ key = "9", mods = "LEADER", action = act.ActivateTab(8) },
 	-- Splits
-	{ key = "\\", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }), desc = "Split pane horizontally" },
-	{ key = "-", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }), desc = "Split pane vertically" },
+	{
+		key = "\\",
+		mods = "LEADER",
+		action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }),
+		desc = "Split pane horizontally",
+	},
+	{
+		key = "-",
+		mods = "LEADER",
+		action = act.SplitVertical({ domain = "CurrentPaneDomain" }),
+		desc = "Split pane vertically",
+	},
 	{ key = "H", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Left", 4 }), desc = "Resize pane left" },
 	{ key = "J", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Down", 4 }), desc = "Resize pane down" },
 	{ key = "K", mods = "LEADER|SHIFT", action = act.AdjustPaneSize({ "Up", 4 }), desc = "Resize pane up" },
@@ -94,7 +109,7 @@ config.keys = {
 
 	-- Utilities
 	{ key = "[", mods = "LEADER", action = act.ActivateCopyMode, desc = "Copy mode" },
-	{ key = "o", mods = "LEADER", action = act.QuickSelect, desc = "Quick select" },
+	{ key = "q", mods = "LEADER", action = act.QuickSelect, desc = "Quick select" },
 }
 
 config.mouse_bindings = {
