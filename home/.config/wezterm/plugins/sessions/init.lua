@@ -1,6 +1,7 @@
 local wezterm = require("wezterm")
 local M = {}
 local root = wezterm.config_dir .. "/plugins/sessions"
+local art = require("plugins.sessions.art")
 local state_dir = (os.getenv("XDG_STATE_HOME") or (wezterm.home_dir .. "/.local/state")) .. "/wezterm/sessions"
 local state_path = state_dir .. "/index.json"
 local engine
@@ -306,6 +307,7 @@ function M.open(window, pane)
     tab:set_zoomed(false)
     local spawned, picker_pane = pcall(function() return pane:split({
       args = { python, root .. "/picker.py", "picker", directory, fzf },
+      set_environment_variables = art.environment(),
       cwd = cwd, domain = { DomainName = "local" },
       -- A top-level split corrupts subsequent split geometry on WezTerm
       -- 20240203 (wezterm/wezterm#4984). Split only the originating pane;

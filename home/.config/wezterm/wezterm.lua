@@ -16,37 +16,30 @@ config.font = wezterm.font_with_fallback({
 	"Symbols Nerd Font Mono",
 })
 config.font_size = 14
-config.line_height = 1.08
+config.line_height = 1.0
 
 -- Window
-config.window_decorations = "RESIZE"
+config.window_decorations = "RESIZE" -- Hidden title bar, with window resizing enabled.
 config.window_close_confirmation = "AlwaysPrompt"
-config.initial_cols = 120
-config.initial_rows = 36
+config.initial_cols = 110
+config.initial_rows = 34
 config.window_padding = {
-	left = 12,
-	right = 12,
-	top = 10,
+	left = 10,
+	right = 10,
+	top = 8,
 	bottom = 8,
 }
-config.window_background_opacity = 0.86
--- config.window_background_opacity = 1
-config.macos_window_background_blur = 24
+-- Match Ghostty's glass effect.
+config.window_background_opacity = 0.8
+config.macos_window_background_blur = 30
+-- Approximate Ghostty's unfocused split opacity with brightness (not alpha).
 config.inactive_pane_hsb = {
-	saturation = 0.85,
-	brightness = 0.60,
+	saturation = 1.0,
+	brightness = 0.7,
 }
 
 -- Appearance
-config.color_scheme = "Tokyo Night"
-config.colors = {
-	cursor_bg = "#c084fc",
-	cursor_fg = "#080b12",
-	cursor_border = "#c084fc",
-	selection_fg = "#080b12",
-	selection_bg = "#c7d2fe",
-	split = "#30363d",
-}
+config.colors = require("colors.tron-legacy")
 config.use_fancy_tab_bar = false
 config.tab_bar_at_bottom = false
 config.hide_tab_bar_if_only_one_tab = false
@@ -63,6 +56,19 @@ config.keys = {
 	-- Reload and native macOS controls
 	{ key = "r", mods = "CMD|SHIFT", action = act.ReloadConfiguration, desc = "Reload WezTerm config" },
 	{ key = "t", mods = "CMD", action = act.SpawnTab("CurrentPaneDomain"), desc = "New tab" },
+	{
+		key = ",",
+		mods = "CMD",
+		action = act.PromptInputLine({
+			description = "Rename tab (leave empty to reset)",
+			action = wezterm.action_callback(function(window, _pane, line)
+				if line ~= nil then
+					window:active_tab():set_title(line)
+				end
+			end),
+		}),
+		desc = "Rename current tab",
+	},
 	{ key = "w", mods = "CMD", action = act.CloseCurrentTab({ confirm = true }), desc = "Close current tab" },
 	{ key = "n", mods = "CMD", action = act.SpawnWindow, desc = "New window" },
 	{ key = "z", mods = "CMD", action = act.TogglePaneZoomState, desc = "Toggle pane zoom" },

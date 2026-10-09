@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -70,18 +71,61 @@ def make_rows(sessions, query, fzf):
     return "\n".join(rows) + "\n"
 
 
-def style():
+def picker_size(height=18):
+    columns, lines = shutil.get_terminal_size((120, 36))
+    return columns, lines, max(0, (columns - 84) // 2), max(0, (lines - height) // 2)
+
+
+ART_PATH = os.environ.get("SESSION_ART_PATH", "")
+ART_HEIGHT = int(os.environ.get("SESSION_ART_HEIGHT", "10"))
+
+
+def render_art():
+    # Send the GIF once; WezTerm decodes and animates the original image frames.
+    # Emit the iTerm image sequence directly: imgcat's terminal queries can hang
+    # inside fzf's preview subprocess, which has piped output rather than a TTY.
+    if not ART_PATH:
+        return
+    path = Path(ART_PATH)
+    payload = base64.b64encode(path.read_bytes()).decode("ascii")
+    width = max(1, int(os.environ.get("FZF_PREVIEW_COLUMNS", "74")))
+    height = max(1, int(os.environ.get("FZF_PREVIEW_LINES", str(ART_HEIGHT))))
+    sys.stdout.write(f"\033]1337;File=inline=1;width={width};height={height};preserveAspectRatio=1:{payload}\007\n")
+    sys.stdout.flush()
+
+
+def animation_options():
+    columns, lines, horizontal, _ = picker_size()
+    if (not ART_PATH
+            or lines < int(os.environ.get("SESSION_ART_MIN_ROWS", "26"))
+            or columns - 2 * horizontal - 10 < int(os.environ.get("SESSION_ART_MIN_COLUMNS", "30"))):
+        return []
+    command = shlex.join([sys.executable, str(Path(__file__).resolve()), "art"])
+    return ["--preview", "exec " + command,
+            f"--preview-window=up,{ART_HEIGHT},border-none,noinfo"]
+
+
+def style(height=18):
+    _, _, horizontal, vertical = picker_size(height)
     return [
-        "--ansi", "--layout=reverse", "--border=none", "--margin=2,4", "--padding=1,2",
+        "--ansi", "--layout=reverse", "--border=rounded", "--border-label= Sessions ",
+        f"--margin={vertical},{horizontal}", "--padding=1,2",
         "--info=hidden", "--no-separator", "--no-scrollbar", "--pointer=›", "--gutter= ",
         "--highlight-line", "--header-first", "--prompt=› ",
-        "--color=bg:-1,fg:#a9b1d6,bg+:#24283b,fg+:#c0caf5,hl:#c084fc,hl+:#c084fc,pointer:#c084fc,prompt:#c084fc,header:#c0caf5,footer:#565f89,gutter:-1",
+        "--input-border=rounded",
+        "--color=bg:-1,fg:#a9b1d6,bg+:#24283b,fg+:#c0caf5,hl:#c084fc,hl+:#c084fc,pointer:#c084fc,prompt:#c084fc,header:#c0caf5,footer:#565f89,gutter:-1,preview-bg:-1,input-border:#565f89,border:#7aa2f7,label:#c084fc",
         "--footer-border=none",
     ]
 
 
 def run_fzf(fzf, args, data=""):
-    result = subprocess.run([fzf, *style(), *args], input=data, text=True,
+    # One row per session, plus borders, padding, search, footer, and art.
+    # Cap the list height so larger collections scroll inside a compact box.
+    header = args[args.index("--header") + 1] if "--header" in args else ""
+    height = 9 + min(6, max(1, len(data.splitlines()))) + len(header.splitlines())
+    if "--preview" in args:
+        height += ART_HEIGHT
+    result = subprocess.run([fzf, *style(height), *args], input=data, text=True,
                             stdout=subprocess.PIPE, env=environment())
     if result.returncode in (1, 130):
         return None
@@ -131,8 +175,9 @@ def picker(directory, fzf):
     while True:
         sessions = json.loads((directory / "sessions.json").read_text())
         result = run_fzf(fzf, [
-            "--disabled", "--delimiter=\t", "--with-nth=3..", "--no-sort", "--gap=1", "--gap-line=",
-            "--header", message or "Sessions", "--ghost=Find or name a session",
+            "--disabled", "--delimiter=\t", "--with-nth=3..", "--no-sort",
+            "--header", message, "--ghost=Find or name a session",
+            *animation_options(),
             "--footer=enter open/create · ctrl-r rename · ctrl-x delete · esc close",
             "--print-query", "--expect=enter,ctrl-r,ctrl-x", "--query", query,
             "--bind", "change:reload-sync(" + command + ")",
@@ -178,6 +223,9 @@ def picker(directory, fzf):
 
 
 def main():
+    if sys.argv[1:] == ["art"]:
+        render_art()
+        return
     mode, directory, fzf = sys.argv[1:]
     directory = Path(directory)
     if mode == "rows":

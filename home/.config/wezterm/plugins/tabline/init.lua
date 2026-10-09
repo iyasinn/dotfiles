@@ -2,26 +2,31 @@ local wezterm = require("wezterm")
 
 local M = {}
 
+local function tab_label(process, tab)
+  return tab.tab_title and tab.tab_title ~= "" and tab.tab_title or process
+end
+
 function M.apply(config)
+  local colors = config.colors
   local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
   tabline.setup({
     options = {
       icons_enabled = false,
-      theme = "Tokyo Night",
+      theme = colors,
       tabs_enabled = true,
       section_separators = "",
       component_separators = "",
       tab_separators = "",
       theme_overrides = {
         normal_mode = {
-          a = { fg = "#c084fc", bg = "#111827" },
-          b = { fg = "#9ca3af", bg = "#111827" },
-          c = { fg = "#9ca3af", bg = "#080b12" },
+          a = { fg = colors.ansi[5], bg = colors.ansi[1] },
+          b = { fg = colors.foreground, bg = colors.ansi[1] },
+          c = { fg = colors.foreground, bg = colors.background },
         },
         tab = {
-          active = { fg = "#e6edf3", bg = "#1f2937" },
-          inactive = { fg = "#6b7280", bg = "#080b12" },
-          inactive_hover = { fg = "#e6edf3", bg = "#111827" },
+          active = { fg = colors.ansi[5], bg = colors.selection_bg },
+          inactive = { fg = colors.brights[1], bg = colors.background },
+          inactive_hover = { fg = colors.selection_fg, bg = colors.ansi[1] },
         },
       },
     },
@@ -29,8 +34,8 @@ function M.apply(config)
       tabline_a = { "workspace" },
       tabline_b = {},
       tabline_c = { " " },
-      tab_active = { "index", { "process", padding = { left = 0, right = 1 } }, "zoomed" },
-      tab_inactive = { "index", { "process", padding = { left = 0, right = 1 } } },
+      tab_active = { "index", { "process", fmt = tab_label, padding = { left = 0, right = 1 } }, "zoomed" },
+      tab_inactive = { "index", { "process", fmt = tab_label, padding = { left = 0, right = 1 } } },
       tabline_x = {},
       tabline_y = { { "datetime", style = "%H:%M" } },
       tabline_z = {},

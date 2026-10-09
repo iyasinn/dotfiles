@@ -3,6 +3,23 @@
 A local WezTerm session manager with a minimal fzf interface. Requires Python 3,
 fzf 0.74 or newer, and the existing `plugins.resurrect` layout engine.
 
+The picker opens in a compact centered box with a bordered search field. Its
+height follows the session count (up to six visible rows, then scrolling).
+A floating pixel island animation with a transparent background sits above the search field, rendered as
+native graphics by WezTerm. Small terminals omit the image. Rename and delete
+prompts use the same centered styling.
+
+Artwork is configured separately in `art.lua`: enable/disable it, select its GIF,
+set its height in terminal rows, and choose the minimum terminal dimensions.
+The Lua session manager passes these settings to the Python renderer when it
+opens the picker. Reload WezTerm's configuration after changing `art.lua`.
+
+The animation is the [floating island GIF selected by the user](https://64.media.tumblr.com/0f5eefb51abeeb07aa525a83e733b408/tumblr_nh7vzpNNJX1t63sglo1_500.gifv).
+`art/floating-island.gif` preserves the source's six frames, timing, original pixel
+dimensions, and transparent background, with transparent side padding for centering.
+The source URL does not identify the artist. Playback uses the iTerm inline image
+protocol with no runtime downloads or extra dependencies.
+
 - **Ctrl-A, S:** open the picker over the current tab using a zoomed temporary pane.
 - **Enter:** switch to the highlighted session, restore a saved one, or create
   the explicitly labeled new session. New sessions start in the originating
