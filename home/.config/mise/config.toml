@@ -10,6 +10,7 @@ bun = "latest"
 rust = "latest"
 pnpm = "latest"
 opam = "latest"
+go = "1.25.6"
 
 [settings]
 # Automatically install missing tool versions when a project/global config asks for them.

@@ -10,12 +10,11 @@
 # shift + alt - l : yabai -m window --warp east
 
 # Applications
-# alt - g : open -a Ghostty
-# alt - a : open -a Arc
-# alt - s : open -a Spotify
-# alt - d : open -a Discord
-# alt - x : open -a Linear
-# alt - o : open -a Obsidian
+# Hyper = shift + ctrl + alt + cmd
+shift + ctrl + alt + cmd - g : open -a Ghostty
+shift + ctrl + alt + cmd - a : open -a Arc
+shift + ctrl + alt + cmd - d : open -a Discord
+shift + ctrl + alt + cmd - o : open -a Obsidian
 
 # Sites
 # shift + alt - g : open -a Arc "https://github.com"
@@ -23,4 +22,3 @@
 #   0.4' -e 'tell application "Arc" to activate' -e 'tell application "System
 #   Events" to tell process "Arc" to set value of attribute "AXFullScreen" of
 #   window 1 to true'
-
