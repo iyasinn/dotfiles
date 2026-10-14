@@ -22,3 +22,4 @@ brew "lazygit"  # Terminal UI for Git
 cask "ghostty"             # Terminal emulator
 # cask "raycast"             # Launcher/productivity app
 cask "karabiner-elements"  # Keyboard remapping
+
