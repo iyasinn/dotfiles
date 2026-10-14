@@ -24,11 +24,24 @@ protocol with no runtime downloads or extra dependencies.
 - **Enter:** switch to the highlighted session, restore a saved one, or create
   the explicitly labeled new session. New sessions start in the originating
   pane's directory. Remote panes currently use the local home directory.
+- **Ctrl-T:** toggle the bordered session preview on the right. It starts off;
+  the island stays visible above the picker. Hiding the preview returns the
+  island to its original position. Search and selection survive toggling.
 - **Ctrl-R:** rename the highlighted session, with its existing name prefilled.
 - **Ctrl-X:** delete the highlighted session after confirmation. This terminates
   its running terminals and removes its saved layout. Cancel is selected first.
 - **Esc:** return to the originating pane and its previous zoom state. In a rename or delete prompt, return
   to the picker instead.
+
+The preview shows a read-only snapshot of one terminal in a running session,
+preferring the originating pane or an active pane. It refreshes when selection
+changes or the preview is reopened; it is not a continuously updating terminal.
+Saved sessions show their windows, tabs, and pane directories instead. If a live
+pane cannot be read, the preview falls back to the saved layout. Terminal contents
+are read on demand and never added to the saved session state. fzf has one preview
+area, so the island uses separate terminal rows above the picker while the
+right-hand preview is open.
+The renderer lives separately in `preview.py`.
 
 Search uses fzf's case-insensitive fuzzy matching. A nonempty query without an
 exact existing name gets an explicit Create row below matching sessions. Session
@@ -36,22 +49,28 @@ names are case-sensitive, may contain spaces and punctuation, and are limited
 to 120 UTF-8 bytes. Names are JSON keys, never filenames or shell commands.
 
 Sessions are WezTerm workspaces. Switching preserves live processes. Layouts
-are saved every 15 seconds and when opening the picker or switching sessions.
+are autosaved on status updates with a 15-second interval while WezTerm is running,
+and when opening the picker or switching sessions. Rename and delete operations
+persist their changes immediately.
 After restarting WezTerm, open the picker and select a saved session to restore
 its windows, tabs, splits, and directories. Restore starts fresh shells; it does
-not restart prior commands or restore process memory or scrollback. The latest
+not restart prior commands or restore process memory, scrollback, or unsaved editor
+content. Shell history is managed separately by your shell. The latest
 changes can be lost if WezTerm exits before the next save. Missing directories
 or unavailable remote domains can prevent restoration.
 
 State lives at `$XDG_STATE_HOME/wezterm/sessions/index.json`, defaulting to
-`~/.local/state/wezterm/sessions/index.json`. Writes replace the file atomically.
+`~/.local/state/wezterm/sessions/index.json`. State is plaintext JSON. Writes replace
+the latest file atomically; no rotating historical backups are kept.
 While the picker is open, snapshots retain the original tab layout. Closing the
 picker removes its temporary pane and restores focus and the previous zoom state. Existing Resurrect save
 files are left intact; they are not imported into this manager.
 
 The manager uses Resurrect's layout capture/restore functions without its
 separate setup, autosave, or keybindings. Keep `sessions = true` and
-`resurrect = false` in `plugins/init.lua`. Quick Select is now **Ctrl-A, Q**.
+`resurrect = false` in `plugins/init.lua`. The latter disables standalone setup;
+it does not disable or remove the engine dependency. Keep the Resurrect checkout
+installed while Sessions is enabled. Quick Select is **Ctrl-A, Q**.
 
 Lua owns workspace mutations and persistence. The Python frontend sends OSC
 requests accepted only from the registered picker pane and waits for an atomic

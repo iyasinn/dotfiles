@@ -1,63 +1,95 @@
 # WezTerm plugins
 
-All plugin switches live at the top of `plugins/init.lua`. Change a plugin from
-`true` to `false`, then press `Cmd+Shift+R`, to disable it without editing the
-main configuration.
-Disabling Resurrect also hides Sessionizer's saved-state deletion entry and shortcut.
+Plugin switches live in `plugins/init.lua`. Change a switch, then press
+`Cmd+Shift+R` to reload the configuration.
+
+## Enabled plugins and dependencies
+
+- **Sessions:** local session picker and persistence, using Python 3, fzf 0.74
+  or newer, and the Resurrect layout engine.
+- **Smart Splits:** navigation and resizing across WezTerm and Neovim panes.
+- **Tabline:** workspace, tab index, process or custom tab title, zoom status,
+  and time. It preserves the main configuration's padding and tab width.
+- **Command Picker:** searchable commands and shortcuts. Loaded last so it can
+  discover bindings added by other plugins.
+
+Keep `sessions = true` and `resurrect = false` for the current setup.
+`resurrect = false` disables Resurrect's standalone setup, not the engine that
+Sessions needs. Sessions loads that engine directly for layout capture and
+restoration; Sessions owns its own autosave, state file, and picker bindings.
+Do not remove the Resurrect checkout while Sessions is enabled.
 
 ## Shortcuts
 
-| Plugin | Shortcut | Action |
+| Feature | Shortcut | Action |
 | --- | --- | --- |
+| Sessions | `Ctrl+A`, then `s` | Open the session picker |
+| Picker | `Enter` | Open, restore, or create the selected session |
+| Picker | `Ctrl+T` | Toggle the session preview on the right |
+| Picker | `Ctrl+R` | Rename the selected session |
+| Picker | `Ctrl+X` | Confirm deletion of its saved layout and running terminals |
+| Picker | `Esc` | Close the picker; cancel a rename/delete prompt |
 | Smart Splits | `Ctrl+H/J/K/L` | Move between WezTerm and Neovim splits |
-| Smart Splits | `Super+H/J/K/L` | Resize splits |
-| Sessionizer | `Ctrl+A`, then `s` | Session menu: switch, create, delete saved state, help |
-| Sessionizer | `Ctrl+A`, then `c` | Create a named session from the current directory |
-| Sessionizer | `Ctrl+A`, then `p` | Fuzzy-pick a git project and create/switch session |
-| Sessionizer | `Ctrl+A`, then `d` | Delete saved session state |
-| Sessionizer | `Ctrl+A`, then `?` | Show WezTerm key bindings |
-| Command Picker | `Ctrl+A`, then `Space` | Search all commands and shortcuts |
-| Resurrect | `Option+Shift+N` | Create workspace |
-| Resurrect | `Option+W` | Save workspace |
-| Resurrect | `Option+S` | Save workspace and window |
-| Resurrect | `Option+Shift+W` | Name and save window |
-| Resurrect | `Option+Shift+T` | Name and save tab |
-| Resurrect | `Option+R` | Restore saved state |
-| Resurrect | `Option+D` | Delete saved state |
+| Smart Splits | `Cmd+H/J/K/L` | Resize splits on macOS |
+| Command Picker | `Ctrl+A`, then `Space` | Search commands and shortcuts |
+| Quick Select | `Ctrl+A`, then `q` | Select detected text |
+| Configuration | `Cmd+Shift+R` | Reload WezTerm configuration |
 
-Note: deleting saved state removes the resurrected/persisted session file. It does
-not close a currently running WezTerm workspace; live workspaces disappear when
-their windows/tabs are closed or moved away from.
+Sessions replaces the old Sessionizer menu. Its former create, project-picker,
+delete-state, and help shortcuts are no longer configured. Resurrect's
+standalone shortcuts are not enabled in this setup.
 
-Tabline runs automatically and displays the workspace, tab index, process,
-zoom status, and time. It preserves the main config's padding and tab width.
+## What Sessions saves
 
-## Removing plugins
+While WezTerm is running, Sessions autosaves layouts on status updates with a
+15-second interval. It also saves when opening the picker or switching sessions;
+rename and delete operations persist their changes immediately.
 
-Disabling a plugin is normally enough. To also remove its downloaded files:
+Saved state includes session names, windows, tabs, splits, and working
+directories. Switching between live sessions preserves their running programs.
+Restoring after a restart rebuilds the layout with fresh shells: it does not
+resume programs, recover unsaved editor content, or restore terminal scrollback.
+Shell history is managed separately by your shell.
 
-1. Disable it in `plugins/init.lua` and reload WezTerm.
-2. Open the debug overlay with `Ctrl+Shift+L`.
-3. Run `wezterm.plugin.list()` in the Lua REPL to find its directory.
-4. Quit WezTerm and delete only that plugin directory.
+State is stored as plaintext JSON at
+`$XDG_STATE_HOME/wezterm/sessions/index.json`, defaulting to
+`~/.local/state/wezterm/sessions/index.json`. Each save atomically replaces the
+latest state; there are no rotating historical backups. Changes since the last
+successful save can be lost after an unexpected quit.
 
-`Awesome WezTerm` is a directory of plugins, not an installable plugin:
-https://github.com/michaelbrusegard/awesome-wezterm
+Session names are user-chosen, not automatically derived from project paths.
+Deleting a session closes its running terminals after confirmation and removes
+its saved layout. Existing standalone Resurrect saves are not imported or deleted.
 
-## Notes
+See [Sessions documentation](plugins/sessions/README.md) for full behavior,
+limitations, artwork configuration, and tests.
 
-Project sessions use their full directory path as the workspace name so projects
-with the same folder name stay separate. The picker abbreviates your home directory
-as `~`. Existing sessions with short names remain available in the session menu.
+## Configuration structure
 
-The Resurrect wrapper resolves modules from the StephenGemin checkout explicitly,
-so an older installed MLFlexer checkout cannot interfere with config loading.
+- `wezterm.lua`: terminal settings and general keybindings.
+- `colors/tron-legacy.lua`: terminal palette.
+- `plugins/init.lua`: plugin switches and application order.
+- `plugins/<name>/init.lua`: local plugin implementations or external-plugin wrappers.
+- `plugins/sessions/picker.py`: fzf interface; Lua owns session state and workspace changes.
+- `plugins/sessions/art.lua` and `art/`: animation settings and bundled artwork.
 
-Smart Splits needs `smart-splits.nvim` installed in Neovim to move seamlessly
-between Neovim windows and WezTerm panes. Without the Neovim half, the WezTerm
-pane bindings still work.
+## Disabling or removing plugins
+
+Disabling a plugin normally suffices. Smart Splits falls back to local pane
+navigation, and Tabline falls back to a simple workspace/time status display.
+
+To remove a downloaded external plugin, first disable every feature that depends
+on it. For Resurrect, that includes Sessions as well as its standalone switch.
+Use `wezterm.plugin.list()` in the debug overlay (`Ctrl+Shift+L`) to identify the
+checkout, quit WezTerm, then delete only that plugin's directory. Local wrappers
+and the Sessions implementation live in this configuration's `plugins/` folder.
+
+## Integration notes
+
+The Resurrect wrapper resolves modules from the StephenGemin checkout explicitly
+when it is already installed, avoiding ambiguity with an older MLFlexer checkout.
+
+Smart Splits needs `smart-splits.nvim` in Neovim for navigation between Neovim
+windows and WezTerm panes. Without it, the WezTerm pane bindings still work.
 On macOS, `Cmd+H/J/K/L` resizes WezTerm panes and forwards `Option+H/J/K/L`
 to Neovim, matching the Neovim resize mappings.
-
-Resurrect saves terminal state and visible terminal output as plaintext under
-the standard WezTerm data directory unless its optional encryption is enabled.

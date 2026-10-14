@@ -71,16 +71,16 @@ def make_rows(sessions, query, fzf):
     return "\n".join(rows) + "\n"
 
 
-def picker_size(height=18):
+def picker_size(height=18, width=84):
     columns, lines = shutil.get_terminal_size((120, 36))
-    return columns, lines, max(0, (columns - 84) // 2), max(0, (lines - height) // 2)
+    return columns, lines, max(0, (columns - width) // 2), max(0, (lines - height) // 2)
 
 
 ART_PATH = os.environ.get("SESSION_ART_PATH", "")
 ART_HEIGHT = int(os.environ.get("SESSION_ART_HEIGHT", "10"))
 
 
-def render_art():
+def render_art(height=None, width=None, stream=None):
     # Send the GIF once; WezTerm decodes and animates the original image frames.
     # Emit the iTerm image sequence directly: imgcat's terminal queries can hang
     # inside fzf's preview subprocess, which has piped output rather than a TTY.
@@ -88,10 +88,13 @@ def render_art():
         return
     path = Path(ART_PATH)
     payload = base64.b64encode(path.read_bytes()).decode("ascii")
-    width = max(1, int(os.environ.get("FZF_PREVIEW_COLUMNS", "74")))
-    height = max(1, int(os.environ.get("FZF_PREVIEW_LINES", str(ART_HEIGHT))))
-    sys.stdout.write(f"\033]1337;File=inline=1;width={width};height={height};preserveAspectRatio=1:{payload}\007\n")
-    sys.stdout.flush()
+    if width is None:
+        width = max(1, int(os.environ.get("FZF_PREVIEW_COLUMNS", "74")))
+    if height is None:
+        height = max(1, int(os.environ.get("FZF_PREVIEW_LINES", str(ART_HEIGHT))))
+    stream = stream or sys.stdout
+    stream.write(f"\033]1337;File=inline=1;width={width};height={height};preserveAspectRatio=1:{payload}\007\n")
+    stream.flush()
 
 
 def animation_options():
@@ -105,8 +108,8 @@ def animation_options():
             f"--preview-window=up,{ART_HEIGHT},border-none,noinfo"]
 
 
-def style(height=18):
-    _, _, horizontal, vertical = picker_size(height)
+def style(height=18, width=84):
+    _, _, horizontal, vertical = picker_size(height, width)
     return [
         "--ansi", "--layout=reverse", "--border=rounded", "--border-label= Sessions ",
         f"--margin={vertical},{horizontal}", "--padding=1,2",
@@ -118,15 +121,49 @@ def style(height=18):
     ]
 
 
+def run_with_art_header(fzf, args, data, height, width):
+    # fzf treats inline images as full-height previews. Give the island its own
+    # terminal rows above a height-limited fzf so the right preview remains text.
+    columns, rows, horizontal, _ = picker_size(height, width)
+    art_height = min(6, ART_HEIGHT)
+    # The bundled GIF has a 4:1 canvas; terminal cells are roughly twice as tall
+    # as they are wide. Center its displayed canvas rather than its width limit.
+    art_width = min(max(1, columns - 2 * horizontal), art_height * 8)
+    art_left = max(0, (columns - art_width) // 2)
+    finder_height = max(8, min(height - art_height, rows - art_height - 2))
+    vertical = max(0, (rows - finder_height - art_height) // 2)
+    options = style(finder_height, width)
+    options = [arg for arg in options if not arg.startswith("--margin=")]
+    options += [f"--margin=0,{horizontal}", f"--height={finder_height}"]
+    with open("/dev/tty", "w") as terminal:
+        terminal.write("\033[?1049h\033[2J")
+        try:
+            terminal.write(f"\033[{vertical + 1};{art_left + 1}H")
+            render_art(height=art_height, width=art_width, stream=terminal)
+            terminal.write(f"\033[{vertical + art_height + 1};1H")
+            terminal.flush()
+            return subprocess.run([fzf, *options, *args], input=data, text=True,
+                                  stdout=subprocess.PIPE, env=environment())
+        finally:
+            terminal.write("\033[?1049l")
+            terminal.flush()
+
+
 def run_fzf(fzf, args, data=""):
     # One row per session, plus borders, padding, search, footer, and art.
     # Cap the list height so larger collections scroll inside a compact box.
     header = args[args.index("--header") + 1] if "--header" in args else ""
+    footer = next((arg.partition("=")[2] for arg in args if arg.startswith("--footer=")), "")
     height = 9 + min(6, max(1, len(data.splitlines()))) + len(header.splitlines())
+    height += max(0, len(footer.splitlines()) - 1)
     if "--preview" in args:
         height += ART_HEIGHT
-    result = subprocess.run([fzf, *style(height), *args], input=data, text=True,
-                            stdout=subprocess.PIPE, env=environment())
+    width = 120 if "--preview-label= Session preview " in args else 84
+    if width == 120 and animation_options():
+        result = run_with_art_header(fzf, args, data, height, width)
+    else:
+        result = subprocess.run([fzf, *style(height, width), *args], input=data, text=True,
+                                stdout=subprocess.PIPE, env=environment())
     if result.returncode in (1, 130):
         return None
     if result.returncode:
@@ -172,14 +209,19 @@ def request(directory, action, **values):
 def picker(directory, fzf):
     command = shlex.join([sys.executable, str(Path(__file__).resolve()), "rows", str(directory), fzf])
     query, message = "", ""
+    preview_visible, position = False, 1
+    preview_command = shlex.join([sys.executable, str(Path(__file__).with_name("preview.py")), str(directory)])
     while True:
         sessions = json.loads((directory / "sessions.json").read_text())
         result = run_fzf(fzf, [
             "--disabled", "--delimiter=\t", "--with-nth=3..", "--no-sort",
             "--header", message, "--ghost=Find or name a session",
-            *animation_options(),
-            "--footer=enter open/create · ctrl-r rename · ctrl-x delete · esc close",
-            "--print-query", "--expect=enter,ctrl-r,ctrl-x", "--query", query,
+            *(["--preview", preview_command + " {1} {2}",
+               "--preview-window=right,45%,border-rounded,noinfo",
+               "--preview-label= Session preview "] if preview_visible else animation_options()),
+            "--footer=enter open/create · ctrl-r rename · ctrl-x delete\nctrl-t preview · esc close",
+            f"--bind=start:pos({position})",
+            "--print-query", "--expect=enter,ctrl-r,ctrl-x,ctrl-t", "--query", query,
             "--bind", "change:reload-sync(" + command + ")",
         ], make_rows(sessions, query, fzf))
         message = ""
@@ -189,6 +231,14 @@ def picker(directory, fzf):
         if len(result) < 3:
             continue
         query, key, row = result[:3]
+        if key == "ctrl-t":
+            preview_visible = not preview_visible
+            candidates = make_rows(sessions, query, fzf).splitlines()
+            identity = row.split("\t", 2)[:2]
+            position = next((i for i, candidate in enumerate(candidates, 1)
+                             if candidate.split("\t", 2)[:2] == identity), 1)
+            continue
+        position = 1
         # A very fast Enter can arrive before a reload has replaced the old
         # list. Never act on a selection from a different query.
         # fzf strips display ANSI codes from accepted rows; compare only the

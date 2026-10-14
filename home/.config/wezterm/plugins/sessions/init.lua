@@ -141,7 +141,11 @@ local function entries(state, current)
   for name in pairs(state.sessions) do names[name] = true end
   for name in pairs(running) do names[name] = true end
   for name in pairs(names) do
-    table.insert(rows, { name = name, status = name == current and "active" or (running[name] and "running" or "saved") })
+    table.insert(rows, {
+      name = name,
+      status = name == current and "active" or (running[name] and "running" or "saved"),
+      snapshot = state.sessions[name] and state.sessions[name].snapshot or nil,
+    })
   end
   local rank = { active = 1, running = 2, saved = 3 }
   table.sort(rows, function(a, b)
@@ -305,9 +309,12 @@ function M.open(window, pane)
     context.original_tab_size = tab:get_size()
     context.was_zoomed = context.original_tab_state.is_zoomed
     tab:set_zoomed(false)
+    local picker_env = art.environment()
+    picker_env.SESSION_WEZTERM = wezterm.executable_dir .. "/wezterm"
+    picker_env.SESSION_ORIGIN_PANE = tostring(context.origin_pane)
     local spawned, picker_pane = pcall(function() return pane:split({
       args = { python, root .. "/picker.py", "picker", directory, fzf },
-      set_environment_variables = art.environment(),
+      set_environment_variables = picker_env,
       cwd = cwd, domain = { DomainName = "local" },
       -- A top-level split corrupts subsequent split geometry on WezTerm
       -- 20240203 (wezterm/wezterm#4984). Split only the originating pane;

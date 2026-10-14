@@ -41,7 +41,7 @@ config.inactive_pane_hsb = {
 -- Appearance
 config.colors = require("colors.tron-legacy")
 config.use_fancy_tab_bar = false
-config.tab_bar_at_bottom = false
+config.tab_bar_at_bottom = true
 config.hide_tab_bar_if_only_one_tab = false
 config.tab_max_width = 28
 
