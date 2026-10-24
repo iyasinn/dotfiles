@@ -26,6 +26,7 @@ Do not remove the Resurrect checkout while Sessions is enabled.
 | Sessions | `Ctrl+A`, then `s` | Open the session picker |
 | Picker | `Enter` | Open, restore, or create the selected session |
 | Picker | `Ctrl+T` | Toggle the session preview on the right |
+| Picker | `Ctrl+P` | Re-read and resend enabled artwork (experimental recovery) |
 | Picker | `Ctrl+R` | Rename the selected session |
 | Picker | `Ctrl+X` | Confirm deletion of its saved layout and running terminals |
 | Picker | `Esc` | Close the picker; cancel a rename/delete prompt |

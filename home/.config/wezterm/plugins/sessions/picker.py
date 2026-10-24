@@ -11,6 +11,8 @@ import sys
 import time
 import uuid
 
+from artwork import image_payload
+
 
 def environment():
     env = os.environ.copy()
@@ -86,8 +88,9 @@ def render_art(height=None, width=None, stream=None):
     # inside fzf's preview subprocess, which has piped output rather than a TTY.
     if not ART_PATH:
         return
-    path = Path(ART_PATH)
-    payload = base64.b64encode(path.read_bytes()).decode("ascii")
+    payload = image_payload(ART_PATH)
+    if payload is None:
+        return
     if width is None:
         width = max(1, int(os.environ.get("FZF_PREVIEW_COLUMNS", "74")))
     if height is None:
@@ -97,15 +100,12 @@ def render_art(height=None, width=None, stream=None):
     stream.flush()
 
 
-def animation_options():
+def artwork_available():
     columns, lines, horizontal, _ = picker_size()
-    if (not ART_PATH
-            or lines < int(os.environ.get("SESSION_ART_MIN_ROWS", "26"))
-            or columns - 2 * horizontal - 10 < int(os.environ.get("SESSION_ART_MIN_COLUMNS", "30"))):
-        return []
-    command = shlex.join([sys.executable, str(Path(__file__).resolve()), "art"])
-    return ["--preview", "exec " + command,
-            f"--preview-window=up,{ART_HEIGHT},border-none,noinfo"]
+    return (bool(ART_PATH)
+            and lines >= int(os.environ.get("SESSION_ART_MIN_ROWS", "26"))
+            and columns - 2 * horizontal - 10 >= int(os.environ.get("SESSION_ART_MIN_COLUMNS", "30"))
+            and image_payload(ART_PATH) is not None)
 
 
 def style(height=18, width=84):
@@ -149,17 +149,18 @@ def run_with_art_header(fzf, args, data, height, width):
             terminal.flush()
 
 
-def run_fzf(fzf, args, data=""):
+def run_fzf(fzf, args, data="", *, artwork=False):
     # One row per session, plus borders, padding, search, footer, and art.
     # Cap the list height so larger collections scroll inside a compact box.
     header = args[args.index("--header") + 1] if "--header" in args else ""
     footer = next((arg.partition("=")[2] for arg in args if arg.startswith("--footer=")), "")
     height = 9 + min(6, max(1, len(data.splitlines()))) + len(header.splitlines())
     height += max(0, len(footer.splitlines()) - 1)
-    if "--preview" in args:
-        height += ART_HEIGHT
+    show_art = artwork and artwork_available()
+    if show_art:
+        height += min(6, ART_HEIGHT)
     width = 120 if "--preview-label= Session preview " in args else 84
-    if width == 120 and animation_options():
+    if show_art:
         result = run_with_art_header(fzf, args, data, height, width)
     else:
         result = subprocess.run([fzf, *style(height, width), *args], input=data, text=True,
@@ -218,12 +219,12 @@ def picker(directory, fzf):
             "--header", message, "--ghost=Find or name a session",
             *(["--preview", preview_command + " {1} {2}",
                "--preview-window=right,45%,border-rounded,noinfo",
-               "--preview-label= Session preview "] if preview_visible else animation_options()),
-            "--footer=enter open/create · ctrl-r rename · ctrl-x delete\nctrl-t preview · esc close",
+               "--preview-label= Session preview "] if preview_visible else []),
+            "--footer=enter open/create · ctrl-r rename · ctrl-x delete\nctrl-t preview · ctrl-p resend art · esc close",
             f"--bind=start:pos({position})",
-            "--print-query", "--expect=enter,ctrl-r,ctrl-x,ctrl-t", "--query", query,
+            "--print-query", "--expect=enter,ctrl-r,ctrl-x,ctrl-t,ctrl-p", "--query", query,
             "--bind", "change:reload-sync(" + command + ")",
-        ], make_rows(sessions, query, fzf))
+        ], make_rows(sessions, query, fzf), artwork=True)
         message = ""
         if result is None:
             request(directory, "cancel")
@@ -231,8 +232,19 @@ def picker(directory, fzf):
         if len(result) < 3:
             continue
         query, key, row = result[:3]
-        if key == "ctrl-t":
-            preview_visible = not preview_visible
+        if key in ("ctrl-t", "ctrl-p"):
+            if key == "ctrl-t":
+                preview_visible = not preview_visible
+            else:
+                # Re-read our source, then rebuild only the picker's screen.
+                # This does not invalidate WezTerm's internal image cache.
+                image_payload.cache_clear()
+                if not ART_PATH:
+                    message = "Artwork is disabled in art.lua."
+                elif not artwork_available():
+                    message = "Artwork unavailable: check the GIF and terminal size."
+                else:
+                    message = "Resending artwork (WezTerm cache recovery is not guaranteed)."
             candidates = make_rows(sessions, query, fzf).splitlines()
             identity = row.split("\t", 2)[:2]
             position = next((i for i, candidate in enumerate(candidates, 1)

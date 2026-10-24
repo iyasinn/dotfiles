@@ -2,7 +2,8 @@ local wezterm = require("wezterm")
 
 -- Session-picker artwork lives here; the session manager only forwards it.
 local M = {
-  enabled = true,
+  -- Disabled after native image rendering failed; resending did not recover it.
+  enabled = false,
   path = wezterm.config_dir .. "/plugins/sessions/art/floating-island.gif",
   height = 10, -- Terminal rows reserved above the search field.
   min_rows = 26,
