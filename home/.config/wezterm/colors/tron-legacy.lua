@@ -8,7 +8,7 @@ return {
 	cursor_border = "#00d9ff",
 	selection_bg = "#16243a",
 	selection_fg = "#d5e9f5",
-	split = "#1d2f47",
+	split = "#89b4fa",
 	-- Black, red, green, yellow, blue, magenta, cyan, white.
 	ansi = {
 		"#101928", "#ff5f45", "#4fd6be", "#e6b455",

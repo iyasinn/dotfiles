@@ -32,10 +32,10 @@ config.window_padding = {
 -- Match Ghostty's glass effect.
 config.window_background_opacity = 0.8
 config.macos_window_background_blur = 30
--- Approximate Ghostty's unfocused split opacity with brightness (not alpha).
+-- Subtle focus cue: inactive panes retain 95% brightness and full saturation.
 config.inactive_pane_hsb = {
 	saturation = 1.0,
-	brightness = 0.7,
+	brightness = 0.95,
 }
 
 -- Appearance
