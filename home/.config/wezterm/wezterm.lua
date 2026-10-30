@@ -5,6 +5,7 @@ local plugins = require("plugins.init")
 local config = wezterm.config_builder()
 
 -- Basics
+config.max_fps = 120
 config.term = "xterm-256color"
 config.check_for_updates = false
 config.scrollback_lines = 20000
@@ -32,10 +33,10 @@ config.window_padding = {
 -- Match Ghostty's glass effect.
 config.window_background_opacity = 0.8
 config.macos_window_background_blur = 30
--- Subtle focus cue: inactive panes retain 95% brightness and full saturation.
+-- Inactive panes retain 70% brightness and full saturation.
 config.inactive_pane_hsb = {
 	saturation = 1.0,
-	brightness = 0.95,
+	brightness = 0.70,
 }
 
 -- Appearance
