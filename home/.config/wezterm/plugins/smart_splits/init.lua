@@ -6,6 +6,7 @@ local M = {}
 function M.apply(config)
   local smart_splits = wezterm.plugin.require("https://github.com/smart-splits-nvim/smart-splits.nvim")
   smart_splits.apply_to_config(config, {
+    log_level = "warn",
     direction_keys = { "h", "j", "k", "l" },
     modifiers = {
       move = "CTRL",

@@ -4,6 +4,9 @@ local plugins = require("plugins.init")
 
 local config = wezterm.config_builder()
 
+-- Keep terminal processes in a separate server across GUI restarts.
+require("plugins.persistent").apply(config)
+
 -- Basics
 config.max_fps = 120
 config.term = "xterm-256color"
@@ -71,7 +74,7 @@ config.keys = {
 		desc = "Rename current tab",
 	},
 	{ key = "w", mods = "CMD", action = act.CloseCurrentTab({ confirm = true }), desc = "Close current tab" },
-	{ key = "n", mods = "CMD", action = act.SpawnWindow, desc = "New window" },
+	{ key = "n", mods = "CMD", action = act.SpawnCommandInNewWindow({ domain = { DomainName = "unix" } }), desc = "New window in current session" },
 	{ key = "z", mods = "CMD", action = act.TogglePaneZoomState, desc = "Toggle pane zoom" },
 	{ key = "LeftArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(-1), desc = "Previous tab" },
 	{ key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(1), desc = "Next tab" },

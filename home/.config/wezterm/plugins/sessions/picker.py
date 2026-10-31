@@ -180,10 +180,12 @@ def ask_name(fzf, old, error=""):
 
 
 def confirm_delete(fzf, name):
+    # A single y keypress confirms; n, enter or esc cancels.
     result = run_fzf(fzf, ["--header", f"Delete “{name}”?\nRunning terminals will be closed and its saved layout removed.",
-        "--footer=enter choose · esc cancel", "--no-input", "--no-sort"],
-        "Cancel\nDelete session\n")
-    return result == ["Delete session"]
+        "--footer=y delete · n or esc cancel", "--no-input", "--no-sort",
+        "--expect=y", "--bind=n:abort,enter:abort,ctrl-x:abort"],
+        "Press y to delete\n")
+    return bool(result) and result[0] == "y"
 
 
 def request(directory, action, **values):
@@ -220,9 +222,10 @@ def picker(directory, fzf):
             *(["--preview", preview_command + " {1} {2}",
                "--preview-window=right,45%,border-rounded,noinfo",
                "--preview-label= Session preview "] if preview_visible else []),
-            "--footer=enter open/create · ctrl-r rename · ctrl-x delete\nctrl-t preview · ctrl-p resend art · esc close",
+            "--footer=enter open/create · ctrl-r rename · ctrl-x delete\nctrl-n/ctrl-p move · ctrl-t preview · esc close",
             f"--bind=start:pos({position})",
-            "--print-query", "--expect=enter,ctrl-r,ctrl-x,ctrl-t,ctrl-p", "--query", query,
+            "--print-query", "--expect=enter,ctrl-r,ctrl-x,ctrl-t", "--query", query,
+            "--bind=ctrl-n:down,ctrl-p:up",
             "--bind", "change:reload-sync(" + command + ")",
         ], make_rows(sessions, query, fzf), artwork=True)
         message = ""
@@ -232,19 +235,8 @@ def picker(directory, fzf):
         if len(result) < 3:
             continue
         query, key, row = result[:3]
-        if key in ("ctrl-t", "ctrl-p"):
-            if key == "ctrl-t":
-                preview_visible = not preview_visible
-            else:
-                # Re-read our source, then rebuild only the picker's screen.
-                # This does not invalidate WezTerm's internal image cache.
-                image_payload.cache_clear()
-                if not ART_PATH:
-                    message = "Artwork is disabled in art.lua."
-                elif not artwork_available():
-                    message = "Artwork unavailable: check the GIF and terminal size."
-                else:
-                    message = "Resending artwork (WezTerm cache recovery is not guaranteed)."
+        if key == "ctrl-t":
+            preview_visible = not preview_visible
             candidates = make_rows(sessions, query, fzf).splitlines()
             identity = row.split("\t", 2)[:2]
             position = next((i for i, candidate in enumerate(candidates, 1)

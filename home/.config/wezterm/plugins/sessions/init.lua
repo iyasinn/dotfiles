@@ -5,14 +5,9 @@ local art = require("plugins.sessions.art")
 local state_dir = (os.getenv("XDG_STATE_HOME") or (wezterm.home_dir .. "/.local/state")) .. "/wezterm/sessions"
 local state_path = state_dir .. "/index.json"
 local engine
-
-local function read_json(path)
-  local file = io.open(path, "r")
-  if not file then return nil end
-  local text = file:read("*a")
-  file:close()
-  return wezterm.json_parse(text)
-end
+local persistent = require("plugins.persistent")
+local recovery = require("plugins.sessions.recovery")
+local store = recovery.new(wezterm, state_path)
 
 local function write_json(path, value)
   local file = assert(io.open(path .. ".tmp", "w"))
@@ -22,15 +17,11 @@ local function write_json(path, value)
 end
 
 local function load()
-  local state = read_json(state_path) or { version = 1, sessions = {} }
-  assert(state.version == 1 and type(state.sessions) == "table", "Unsupported session state file")
-  return state
+  return store.load()
 end
 
 local function persist(state)
-  local ok, _, err = wezterm.run_child_process({ "mkdir", "-p", state_dir })
-  assert(ok, err)
-  write_json(state_path, state)
+  store.persist(state)
 end
 
 local function valid_name(name)
@@ -95,12 +86,17 @@ local function clean_tree(tree)
 end
 
 local function capture(state)
-  local snapshots = {}
+  local instance = persistent.instance()
+  recovery.protect_startup(wezterm, state, { name = persistent.name, instance = instance })
+  local snapshots, managed = {}, {}
   for _, win in ipairs(wezterm.mux.all_windows()) do
     local name = win:get_workspace()
     local snapshot = snapshots[name] or { workspace = name, window_states = {} }
     local window_state = { title = win:get_title(), tabs = {} }
     for _, info in ipairs(win:tabs_with_info()) do
+      for _, pane in ipairs(info.tab:panes()) do
+        if pane:get_domain_name() == persistent.name then managed[name] = true end
+      end
       local context = is_picker(info.tab)
       if not context or context.original_tab_state then
         -- Keep the pre-picker layout while the temporary pane is present.
@@ -113,7 +109,7 @@ local function capture(state)
       end
     end
     if #window_state.tabs > 0 then
-      -- Also support an old temporary-tab picker still open during a reload.
+      -- Exclude the temporary picker tab from the saved session layout.
       for _, context in pairs(pickers()) do
         if context.window_id == win:window_id() and not context.origin_pane then
           local index = 0
@@ -130,7 +126,9 @@ local function capture(state)
     end
   end
   for name, snapshot in pairs(snapshots) do
-    state.sessions[name] = { snapshot = snapshot }
+    if not (wezterm.GLOBAL.sessions_excluded or {})[name] then
+      state.sessions[name] = { snapshot = snapshot, mux_instance = managed[name] and instance or nil }
+    end
   end
   return state
 end
@@ -157,17 +155,24 @@ end
 
 local function origin_tab(context)
   local ok, tab = pcall(wezterm.mux.get_tab, context.origin_tab)
-  if ok and tab then tab:activate() end
+  if ok and tab then
+    tab:activate()
+    local gui = tab:window():gui_window()
+    if gui then gui:focus() end
+  end
 end
 
 local function switch(name, cwd, state)
   if not live()[name] then
+    local domain = persistent.domain()
     local saved = state.sessions[name]
     if saved and saved.snapshot and #saved.snapshot.window_states > 0 then
-      engine.workspace_state.restore_workspace(saved.snapshot, { relative = true, switch_workspace = false })
-      assert(live()[name], "Could not restore session; its saved layout has been kept")
+      recovery.restore(wezterm, engine, state, name, persistent.name)
     else
-      wezterm.mux.spawn_window({ workspace = name, cwd = cwd })
+      -- Assign the workspace after spawning so the client sends the name to
+      -- the server after its remote-window mapping has been established.
+      local _, _, win = wezterm.mux.spawn_window({ domain = domain, cwd = cwd })
+      win:set_workspace(name)
     end
   end
   wezterm.mux.set_active_workspace(name)
@@ -299,44 +304,72 @@ function M.open(window, pane)
     local cwd_url = pane:get_current_working_dir()
     local cwd = cwd_url and cwd_url.file_path or wezterm.home_dir
     -- A remote pane's path may not exist on this machine; the picker runs locally.
-    if pane:get_domain_name() ~= "local" then cwd = wezterm.home_dir end
+    if pane:get_domain_name() ~= "local" and pane:get_domain_name() ~= persistent.name then cwd = wezterm.home_dir end
     local context = { directory = directory, cwd = cwd, workspace = window:active_workspace(),
       origin_tab = pane:tab():tab_id(), origin_pane = pane:pane_id(), window_id = window:window_id() }
     write_json(directory .. "/sessions.json", entries(state, context.workspace))
     local tab = pane:tab()
-    context.original_tab_state = engine.tab_state.get_tab_state(tab)
-    clean_tree(context.original_tab_state.pane_tree)
-    context.original_tab_size = tab:get_size()
-    context.was_zoomed = context.original_tab_state.is_zoomed
-    tab:set_zoomed(false)
+    local local_pane = pane:get_domain_name() == "local"
+    if local_pane then
+      context.original_tab_state = engine.tab_state.get_tab_state(tab)
+      clean_tree(context.original_tab_state.pane_tree)
+      context.original_tab_size = tab:get_size()
+      context.was_zoomed = context.original_tab_state.is_zoomed
+      tab:set_zoomed(false)
+    else
+      -- The picker must use the GUI socket/IDs, not the server's IDs. A local
+      -- tab avoids mixing temporary local splits into a server-owned pane tree.
+      context.origin_pane = nil
+    end
     local picker_env = art.environment()
     picker_env.SESSION_WEZTERM = wezterm.executable_dir .. "/wezterm"
-    picker_env.SESSION_ORIGIN_PANE = tostring(context.origin_pane)
-    local spawned, picker_pane = pcall(function() return pane:split({
-      args = { python, root .. "/picker.py", "picker", directory, fzf },
-      set_environment_variables = picker_env,
-      cwd = cwd, domain = { DomainName = "local" },
-      -- A top-level split corrupts subsequent split geometry on WezTerm
-      -- 20240203 (wezterm/wezterm#4984). Split only the originating pane;
-      -- zoom still makes the picker fill the whole tab.
-      direction = "Bottom", size = 0.5,
-    }) end)
+    picker_env.SESSION_ORIGIN_PANE = tostring(pane:pane_id())
+    local spawned, picker_pane = pcall(function()
+      local args = {
+        args = { python, root .. "/picker.py", "picker", directory, fzf },
+        set_environment_variables = picker_env,
+        cwd = cwd, domain = { DomainName = "local" },
+      }
+      if local_pane then
+        args.direction, args.size = "Bottom", 0.5
+        return pane:split(args)
+      end
+      local _, picker = pane:tab():window():spawn_tab(args)
+      return picker
+    end)
     if not spawned then
-      pane:activate()
-      tab:set_zoomed(context.was_zoomed)
+      if local_pane then pane:activate(); tab:set_zoomed(context.was_zoomed) end
       error(picker_pane)
     end
-    context.picker_pane, context.picker_tab = picker_pane:pane_id(), tab:tab_id()
+    context.picker_pane, context.picker_tab = picker_pane:pane_id(), picker_pane:tab():tab_id()
     contexts[tostring(picker_pane:pane_id())] = context
     wezterm.GLOBAL.session_pickers = contexts
     picker_pane:activate()
-    tab:set_zoomed(true)
+    if local_pane then tab:set_zoomed(true) end
     watch_picker(tostring(picker_pane:pane_id()))
   end)
   if not ok then
     wezterm.log_error(err)
     window:toast_notification("Sessions", tostring(err), nil, 8000)
   end
+end
+
+function M.detach(window, pane)
+  if pane:get_domain_name() ~= persistent.name then
+    window:toast_notification("Sessions", "This pane is local. Use wezterm connect unix for persistent terminals.", nil, 6000)
+    return
+  end
+  cleanup_pickers()
+  for _ in pairs(pickers()) do
+    window:toast_notification("Sessions", "Close the session picker before detaching.", nil, 6000)
+    return
+  end
+  local ok, err = pcall(function() persist(capture(load())) end)
+  if not ok then
+    window:toast_notification("Sessions", "Could not save layout: " .. tostring(err), nil, 8000)
+    return
+  end
+  window:perform_action(wezterm.action.DetachDomain({ DomainName = persistent.name }), pane)
 end
 
 function M.apply(config)
@@ -356,6 +389,7 @@ function M.apply(config)
     local ok, err = pcall(function() persist(capture(load())) end)
     if not ok then wezterm.log_error("Sessions autosave: " .. tostring(err)) end
   end)
+  table.insert(config.keys, { key = "d", mods = "LEADER", action = wezterm.action_callback(M.detach), desc = "Detach persistent sessions (keep programs running)" })
   table.insert(config.keys, { key = "s", mods = "LEADER", action = wezterm.action_callback(M.open), desc = "Open session picker" })
 end
 
